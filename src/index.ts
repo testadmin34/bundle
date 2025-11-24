@@ -86,16 +86,38 @@ async function main() {
         output: process.stdout
     });
 
+    function findProduct(sku: string): Product | undefined {
+        const trimmed = sku.trim();
+        // Exact match
+        if (productMap.has(trimmed)) {
+            return productMap.get(trimmed);
+        }
+        // Case-insensitive exact match
+        const lower = trimmed.toLowerCase();
+        for (const [id, prod] of productMap.entries()) {
+            if (id.toLowerCase() === lower) {
+                return prod;
+            }
+        }
+        // Partial match (contains)
+        for (const [id, prod] of productMap.entries()) {
+            if (id.toLowerCase().includes(lower) || prod.name.toLowerCase().includes(lower)) {
+                return prod;
+            }
+        }
+        return undefined;
+    }
+
     const askSku = () => {
-        rl.question('\nEnter SKU (g:id) to get bundle suggestions (or "exit"): ', (sku) => {
+        rl.question('\nEnter SKU (g:id) to get bundle suggestions (or "exit"): ', (sku: string) => {
             if (sku.toLowerCase() === 'exit') {
                 rl.close();
                 return;
             }
 
-            const product = productMap.get(sku.trim());
+            const product = findProduct(sku);
             if (!product) {
-                console.log('Product not found!');
+                console.log('Product not found! Please ensure you use the exact SKU shown in the sample list.');
                 askSku();
                 return;
             }
