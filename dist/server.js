@@ -51,14 +51,13 @@ app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.static(path.join(__dirname, '../public')));
 const XML_PATH = path.join(__dirname, '../insider.xml');
-const XML_URL = process.env.XML_URL || 'https://cf6ad7.s3.amazonaws.com/insider.xml';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // Initialize Gemini AI if API key is available
 let genAI = null;
 let model = null;
 if (GEMINI_API_KEY) {
     genAI = new generative_ai_1.GoogleGenerativeAI(GEMINI_API_KEY);
-    model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    model = genAI.getGenerativeModel({ model: 'gemini-pro' });
     console.log('✅ Gemini AI enabled for smart recommendations');
 }
 else {
@@ -81,35 +80,12 @@ let products = [];
 let productMap = new Map();
 let tfidf = new natural_1.TfIdf();
 async function initialize() {
-    let xmlData;
-    // Try to load from local file first, then from URL
-    if (fs.existsSync(XML_PATH)) {
-        console.log('Reading XML file from local path...');
-        xmlData = fs.readFileSync(XML_PATH, 'utf-8');
+    if (!fs.existsSync(XML_PATH)) {
+        console.error(`File not found: ${XML_PATH}`);
+        return;
     }
-    else {
-        console.log(`Local XML not found. Fetching from URL: ${XML_URL}`);
-        try {
-            const response = await fetch(XML_URL);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch XML: ${response.statusText}`);
-            }
-            xmlData = await response.text();
-            console.log('XML fetched successfully from URL');
-            // Save the fetched XML locally for future runs
-            try {
-                fs.writeFileSync(XML_PATH, xmlData, 'utf-8');
-                console.log('Fetched XML saved to local path for caching');
-            }
-            catch (writeErr) {
-                console.error('Failed to write fetched XML to local file:', writeErr);
-            }
-        }
-        catch (error) {
-            console.error('Failed to fetch XML from URL:', error);
-            return;
-        }
-    }
+    console.log('Reading XML file...');
+    const xmlData = fs.readFileSync(XML_PATH, 'utf-8');
     console.log('Parsing XML...');
     const parser = new fast_xml_parser_1.XMLParser({
         ignoreAttributes: false,
@@ -118,17 +94,6 @@ async function initialize() {
     });
     const jsonObj = parser.parse(xmlData);
     let items = jsonObj.rss?.channel?.item;
-    // Filter out items that are out of stock (g:availability = 'out of stock')
-    if (Array.isArray(items)) {
-        items = items.filter((item) => {
-            const avail = item['g:availability'] ?? item['availability'];
-            if (typeof avail === 'string') {
-                return avail.trim().toLowerCase() !== 'out of stock';
-            }
-            // If the field is missing or not a string, keep the item
-            return true;
-        });
-    }
     if (!items) {
         console.log('Standard RSS structure not found.');
         return;
