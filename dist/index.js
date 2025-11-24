@@ -107,7 +107,7 @@ async function main() {
             }
             const product = productMap.get(sku.trim());
             if (!product) {
-                console.log('Product not found!');
+                console.log('Ürün bulunamadı!');
                 askSku();
                 return;
             }
