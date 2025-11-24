@@ -80,6 +80,13 @@ async function initialize() {
             }
             xmlData = await response.text();
             console.log('XML fetched successfully from URL');
+            // Save the fetched XML locally for future runs
+            try {
+                fs.writeFileSync(XML_PATH, xmlData, 'utf-8');
+                console.log('Fetched XML saved to local path for caching');
+            } catch (writeErr) {
+                console.error('Failed to write fetched XML to local file:', writeErr);
+            }
         } catch (error) {
             console.error('Failed to fetch XML from URL:', error);
             return;
