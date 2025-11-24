@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bundle Öneri Sistemi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 2rem;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+
+        .header p {
+            font-size: 0.95rem;
+            color: #666;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            border: 1px solid #e0e0e0;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+            font-size: 0.95rem;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .radio-option {
+            flex: 1;
+        }
+
+        .radio-option input[type="radio"] {
+            display: none;
+        }
+
+        .radio-option label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+            font-weight: 500;
+        }
+
+        .radio-option input[type="radio"]:checked+label {
+            background: #2196F3;
+            color: white;
+            border-color: #2196F3;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #2196F3;
+            background: white;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.9rem;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1976D2;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .selected-product {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            padding: 1.5rem;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .selected-product img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background: white;
+        }
+
+        .selected-product-info {
+            flex: 1;
+        }
+
+        .selected-product h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .selected-product .sku {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .bundle-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #2d3748;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .product-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 1rem;
+            transition: box-shadow 0.2s;
+        }
+
+        .product-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+            background: #fafafa;
+            border-radius: 4px;
+        }
+
+        .product-card .badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+        }
+
+        .product-card .badge.complementary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .product-card .badge.similar {
+            background: #2196F3;
+            color: white;
+        }
+
+        .product-card h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+            line-height: 1.4;
+        }
+
+        .product-card .sku {
+            color: #718096;
+            font-size: 0.85rem;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Ürün Öneri Sistemi</h1>
+            <p>Akıllı benzer ve tamamlayıcı ürünler için öneriler</p>
+        </div>
+
+        <div class="card">
+            <form id="recommendForm">
+                <div class="form-group">
+                    <label>Öneri Tipi</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="similar" name="type" value="similar" checked>
+                            <label for="similar">
+                                <span>Benzer Ürünler</span>
+                            </label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="complementary" name="type" value="complementary">
+                            <label for="complementary">
+                                <span>Tamamlayıcı Ürünler</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="sku">Ürün SKU</label>
+                    <input type="text" id="sku" placeholder="Örn: RBL032, ZVG042, SIEM539" required>
+                </div>
+
+                <button type="submit">Önerileri Getir</button>
+            </form>
+
+            <div class="error" id="error"></div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Öneriler hazırlanıyor...</p>
+            </div>
+        </div>
+
+        <div class="results" id="results">
+            <div class="card">
+                <div class="selected-product" id="selectedProduct"></div>
+
+                <h2 class="bundle-title">Önerilen Bundle</h2>
+                <div class="product-grid" id="bundleGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('recommendForm');
+        const resultsDiv = document.getElementById('results');
+        const errorDiv = document.getElementById('error');
+        const loadingDiv = document.getElementById('loading');
+        const selectedProductDiv = document.getElementById('selectedProduct');
+        const bundleGrid = document.getElementById('bundleGrid');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const sku = document.getElementById('sku').value.trim();
+            const type = document.querySelector('input[name="type"]:checked').value;
+
+            // Reset
+            errorDiv.classList.remove('show');
+            resultsDiv.classList.remove('show');
+            loadingDiv.classList.add('show');
+
+            try {
+                const response = await fetch(`/api/recommend?sku=${encodeURIComponent(sku)}&type=${type}`);
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Bir hata oluştu');
+                }
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.add('show');
+            } finally {
+                loadingDiv.classList.remove('show');
+            }
+        });
+
+        function displayResults(data) {
+            // Get image URL from raw data
+            const getImageUrl = (product) => {
+                return product.raw?.image_link || product.raw?.['g:image_link'] || '';
+            };
+
+            // Selected Product
+            const targetImage = getImageUrl(data.target);
+            selectedProductDiv.innerHTML = `
+                ${targetImage ? `<img src="${targetImage}" alt="${data.target.name}" onerror="this.style.display='none'">` : ''}
+                <div class="selected-product-info">
+                    <h3>${data.target.name}</h3>
+                    <div class="sku">SKU: ${data.target.id}</div>
+                </div>
+            `;
+
+            // Bundle
+            bundleGrid.innerHTML = data.bundle.map(product => {
+                const imageUrl = getImageUrl(product);
+                return `
+                    <div class="product-card">
+                        ${imageUrl ? `<img src="${imageUrl}" alt="${product.name}" onerror="this.style.display='none'">` : ''}
+                        <span class="badge ${product.isComplementary ? 'complementary' : 'similar'}">
+                            ${product.isComplementary ? 'Tamamlayıcı' : 'Benzer'}
+                        </span>
+                        <h4>${product.name}</h4>
+                        <div class="sku">SKU: ${product.id}</div>
+                    </div>
+                `;
+            }).join('');
+
+            resultsDiv.classList.add('show');
+        }
+    </script>
+</body>
+
+</html>
